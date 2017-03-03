@@ -157,7 +157,7 @@ local lock_flood = group[tostring(msg.chat_id)]['settings']['lock_flood']
 				else
 					tg.deleteMessages(msg.chat_id_, msg.id_)
 					kick_user(chat, user)
-					tg.sendMessage(msg.chat_id_, msg.id_, 0, '*[* `'..user..'` *] has been kicked because of spam flooding*\n\n`Channel:` @LeaderCh', 0, 'md')
+					tg.sendMessage(msg.chat_id_, msg.id_, 0, '*[* `'..user..'` *] has been kicked because of spam flooding*\n\n`Channel:` @senator_tea', 0, 'md')
 					redis:setex('sender:'..user..':flood', 30, true)
 				end
 			end
