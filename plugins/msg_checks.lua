@@ -40,6 +40,15 @@ local is_sticker_msg = msg.text:match("!!!sticker:")
 if group_lock_sticker == 'yes' and is_sticker_msg then
 tg.deleteMessages(msg.chat_id_, {[0] = msg.id_ })
 end
+local function isABotBadWay (user)
+local username = user.username or ''
+return username:match("[Bb]ot$")
+end
+local group_lock_bot = group[tostring(msg.chat_id)]['settings']['lock_bot']
+local is_bot_msg = msg.text:match("^!!tgservice (chat_add_user)$") or msg.text:match("^!!tgservice (chat_add_user_link)$")
+if group_lock_bot == 'yes' and is_bot_msg and isABotBadWay(user) then
+tg.deleteMessages(msg.chat_id_, {[0] = msg.id_ })
+end
 local group_lock_contact = group[tostring(msg.chat_id)]['settings']['lock_contact']
 local is_contact_msg = msg.text:match("!!!contact:")
 if group_lock_contact == 'yes' and is_contact_msg then
@@ -125,6 +134,35 @@ local group_community_lock = group[tostring(msg.chat_id)]['settings']['lock_comm
 if group_community_lock == 'yes' and not msg.text:match("#") then
 tg.deleteMessages(msg.chat_id_, {[0] = msg.id_ })
 end
+local lock_flood = group[tostring(msg.chat_id)]['settings']['lock_flood']	
+		if lock_flood == "yes" then
+			local hash = 'user:'..user..':msgs'
+			local msgs = tonumber(redis:get(hash) or 0)
+			local NUM_MSG_MAX = 5
+			if addgroup then
+				if group[tostring(chat)]['settings']['num_msg_max'] then
+					NUM_MSG_MAX = tonumber(group[tostring(chat)]['settings']['num_msg_max'])
+				end
+			end
+			if msgs > NUM_MSG_MAX then
+				if is_momod(msg) or is_owner(msg) or is_robot(msg) then
+					return
+				end
+				local is_adduser = msg.text:match("!!!tgservice:")
+				if is_adduser then
+					return
+				end
+				if redis:get('sender:'..user..':flood') then
+					return
+				else
+					tg.deleteMessages(msg.chat_id_, msg.id_)
+					kick_user(chat, user)
+					tg.sendMessage(msg.chat_id_, msg.id_, 0, '*[* `'..user..'` *] has been kicked because of spam flooding*\n\n`Channel:` @LeaderCh', 0, 'md')
+					redis:setex('sender:'..user..':flood', 30, true)
+				end
+			end
+			redis:setex(hash, TIME_CHECK, msgs+1)
+		end
 end
 end
 end
